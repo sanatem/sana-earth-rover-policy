@@ -9,9 +9,10 @@ Face on first use
 ([`sanatem/samtp-mini-traversability`](https://huggingface.co/sanatem/samtp-mini-traversability),
 public, no token).
 
-No ROS. The Earth Rovers SDK is used as a **black box** inside `lib/`: our
-Python programs talk HTTP to `localhost:8000`, and the SDK's dashboard is
-watched in a browser at the same URL.
+No ROS. Run Earth Rovers SDK v6.2 or newer as a separate service. The mission
+programs talk HTTP to `localhost:8000` by default, and the SDK's dashboard is
+watched in a browser at the same URL. Set `ROVER_BASE_URL` or pass `--base-url`
+when the SDK runs elsewhere.
 
 ```mermaid
 flowchart LR
@@ -23,9 +24,7 @@ flowchart LR
         M2 --> T --> G
         M1 --> T
     end
-    subgraph "lib/ (black box)"
-        S["Earth Rovers SDK<br/>localhost:8000"]
-    end
+    S["External Earth Rovers SDK v6.2+<br/>localhost:8000"]
     B["Browser<br/>SDK dashboard :8000<br/>live viewer :8001"]
     R(("Mini+ rover"))
 
@@ -43,15 +42,14 @@ Sana_Rover_policy/
 ├── sana/                 # mission v2 package: pure FSM, threads, viewer, report
 ├── traversability/       # rover_traversability package (predictor, policy, tests)
 ├── genie/                # SAM2 fork with the SAM-TP prompt encoder (vendored)
-├── scripts/setup.sh      # installs everything, clones the SDK into lib/
-├── scripts/run_sdk.sh    # starts the SDK (black box) on localhost:8000
+├── scripts/setup.sh      # installs this project's Python dependencies
 ├── tests/                # mission v2 test suite (no torch, no network)
-└── lib/                  # NOT versioned: the SDK, cloned by setup.sh
+└── runs/                 # generated mission logs and reports (not versioned)
 ```
 
-`lib/` is gitignored on purpose: update the SDK with `git pull` inside
-`lib/earth-rovers-sdk` without touching this project; pin a version with
-`git checkout <tag|commit>` there.
+The SDK is intentionally not cloned, installed, started, or updated by this
+repository. Manage its checkout and credentials separately so SDK upgrades do
+not mutate the policy environment.
 
 ## Setup (once)
 
@@ -61,8 +59,12 @@ pyenv activate venv313   # project environment (see AGENTS.md)
 ```
 
 With an environment active, `setup.sh` installs into it; without one it
-creates a local `.venv/` (Python 3.10–3.13). Then configure the bot
-credentials in `lib/earth-rovers-sdk/.env`.
+creates a local `.venv/` (Python 3.10–3.13).
+
+Start Earth Rovers SDK v6.2+ separately before launching a mission. Its default
+address is `http://localhost:8000`; for another host or port, either export
+`ROVER_BASE_URL=http://host:port` or add `--base-url http://host:port` to the
+mission command.
 
 ## Mission v2 (`missions/level2.py`) — the recommended runner
 
@@ -157,4 +159,3 @@ Both run without torch, checkpoint or network.
 - On CPU-only machines inference takes ~0.5–4 s/frame; the runner detects it,
   widens the staleness budget and caps speed automatically (and the
   stale-mask guard stops the rover if perception stalls).
-

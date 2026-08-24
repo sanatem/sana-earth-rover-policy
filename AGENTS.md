@@ -31,8 +31,10 @@ pyenv activate venv313
   not reference paths in other repos and do not install those packages from
   git. `traversability/` mirrors an external PR to the UNLP team's repo — do
   not modify it; mission-v2 code lives in `sana/`.
-- `lib/` holds only the Earth Rovers SDK (black box, cloned by setup.sh) and
-  is not versioned.
+- Earth Rovers SDK v6.2+ runs as a separate service and is not cloned,
+  installed, started or updated by this repo. The default URL is
+  `http://localhost:8000`, configurable through `ROVER_BASE_URL` or
+  `--base-url`.
 - Anything that moves the rover requires the `--yes-i-want-the-rover-to-move`
   flag; keep that contract in any new script. `--dry-run` must never POST
   `/control` or `/checkpoint-reached`.
